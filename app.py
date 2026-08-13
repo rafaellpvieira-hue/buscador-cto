@@ -30,7 +30,8 @@ CIDADES_OFICIAIS = [
     "BELA VISTA",
     "RIBEIRÃO",
     "INACIOS",
-    "COQUEIROS"
+    "COQUEIROS",
+    "CONC. DOS OUROS"
     
     
     
