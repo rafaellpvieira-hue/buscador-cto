@@ -73,17 +73,16 @@ def parse_element(element, container_stack=None):
 
     return results
 
-def processar_arquivo_uploaded(uploaded_file):
+def processar_bytes_kml_kmz(conteudo_bytes, nome_arquivo):
     ctos_list = []
-    nome_arq = uploaded_file.name
-    ext = os.path.splitext(nome_arq)[1].lower()
-
+    ext = os.path.splitext(nome_arquivo)[1].lower()
     kmls_bytes = []
 
     if ext == ".kml":
-        kmls_bytes.append(uploaded_file.read())
+        kmls_bytes.append(conteudo_bytes)
     elif ext == ".kmz":
-        with zipfile.ZipFile(uploaded_file, 'r') as z:
+        import io
+        with zipfile.ZipFile(io.BytesIO(conteudo_bytes), 'r') as z:
             kmls = [f for f in z.namelist() if f.lower().endswith('.kml')]
             for kml_filename in kmls:
                 kmls_bytes.append(z.read(kml_filename))
@@ -112,29 +111,37 @@ def processar_arquivo_uploaded(uploaded_file):
 st.title("🔍 Buscador de CTOs - FTTH")
 st.caption("Consulte a localização de caixas ópticas no computador ou smartphone")
 
-# Menu Lateral para Upload
-st.sidebar.header("📁 Arquivos do Projeto")
+todas_ctos = []
+
+# 1. Carrega automaticamente qualquer arquivo .kmz ou .kml da pasta da aplicação
+arquivos_repositorio = [f for f in os.listdir('.') if f.lower().endswith(('.kmz', '.kml'))]
+
+for nome_arq in arquivos_repositorio:
+    with open(nome_arq, 'rb') as f:
+        ctos = processar_bytes_kml_kmz(f.read(), nome_arq)
+        todas_ctos.extend(ctos)
+
+# 2. Permite uploads adicionais na barra lateral
+st.sidebar.header("📁 Gerenciar Arquivos")
 uploaded_files = st.sidebar.file_uploader(
-    "Carregue um ou vários arquivos KMZ / KML",
+    "Enviar KMZ/KML adicional",
     type=["kmz", "kml"],
     accept_multiple_files=True
 )
 
-todas_ctos = []
 if uploaded_files:
     for f in uploaded_files:
-        ctos_extraidas = processar_arquivo_uploaded(f)
+        ctos_extraidas = processar_bytes_kml_kmz(f.read(), f.name)
         todas_ctos.extend(ctos_extraidas)
 
-    st.sidebar.success(f"🟢 {len(uploaded_files)} arquivo(s) carregado(s)")
-    st.sidebar.metric("Total de CTOs no Sistema", len(todas_ctos))
+st.sidebar.metric("Total de CTOs no Sistema", len(todas_ctos))
 
-# Trava de segurança: se não houver CTOs carregadas, exibe instrução e para a execução aqui
+# Trava de segurança
 if not todas_ctos:
-    st.info("👈 Por favor, carregue os arquivos **KMZ/KML** no menu lateral à esquerda para começar.")
+    st.info("👈 Nenhum arquivo KMZ/KML encontrado. Adicione os arquivos no GitHub ou faça upload ao lado.")
     st.stop()
 
-# Monta o DataFrame garantindo as colunas
+# Monta o DataFrame
 df = pd.DataFrame(todas_ctos)
 
 # Filtros na Tela Principal
@@ -142,7 +149,7 @@ st.subheader("🔎 Filtros de Busca")
 col1, col2 = st.columns([1, 1])
 
 with col1:
-    cidades_presentes = list(df["Projeto / Cidade"].unique())
+    cidades_presentes = list(df["Projeto / Cidade"].unique()) if "Projeto / Cidade" in df.columns else []
     cidades_ordenadas = [c for c in CIDADES_OFICIAIS if c in cidades_presentes]
     outras_cidades = [c for c in cidades_presentes if c not in CIDADES_OFICIAIS]
     
