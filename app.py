@@ -21,7 +21,8 @@ CIDADES_OFICIAIS = [
     "CACHOEIRA DE MINAS",
     "SAO BENTO DO SAPUCAI",
     "SAPUCAI MIRIM",
-    "POUSO ALEGRE"
+    "POUSO ALEGRE",
+    "RIBEIRAOZINHO"
 ]
 
 def normalizar(texto):
