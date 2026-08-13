@@ -24,7 +24,16 @@ CIDADES_OFICIAIS = [
     "POUSO ALEGRE",
     "RIBEIRAOZINHO",
     "PONTE DE FERRO",
-    "BAU DO CENTRO"
+    "BAU DO CENTRO",
+    "OSÓRIO",
+    "CORREGO DA FOICE",
+    "BELA VISTA",
+    "RIBEIRÃO",
+    "INACIOS",
+    "COQUEIROS"
+    
+    
+    
 ]
 
 def normalizar(texto):
