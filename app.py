@@ -16,7 +16,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Ocultar menus, barras do Streamlit e o cabeçalho/título dentro do menu da tabela
+# Ocultar menus, barras do Streamlit e desativar o menu das colunas da tabela
 ocultar_elementos_css = """
     <style>
     #MainMenu {visibility: hidden;}
@@ -31,17 +31,12 @@ ocultar_elementos_css = """
     a[class*="viewerBadge"] {display: none !important;}
     [data-testid="stActionButton"] {display: none !important;}
 
-    /* Remove o menu dos 3 pontinhos no cabeçalho das tabelas */
-    [data-testid="stDataFrame"] [role="columnheader"] button,
-    [data-testid="stDataFrame"] [role="columnheader"] svg {
+    /* DESATIVA E REMOVE O MENU DAS COLUNAS DA TABELA COMPLETAMENTE */
+    div[role="menu"],
+    [data-baseweb="popover"]:has([role="menu"]) {
         display: none !important;
-    }
-
-    /* Oculta o título da coluna e o ícone de cópia dentro do menu popover da tabela */
-    [data-baseweb="menu"] > div:first-child,
-    [role="menu"] > div:first-child,
-    div[data-baseweb="popover"] [role="menu"] > div:first-child {
-        display: none !important;
+        visibility: hidden !important;
+        pointer-events: none !important;
     }
     </style>
 """
