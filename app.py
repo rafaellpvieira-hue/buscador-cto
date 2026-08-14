@@ -26,16 +26,7 @@ ocultar_elementos_css = """
     </style>
 """
 st.markdown(ocultar_elementos_css, unsafe_allow_html=True)
-# Ocultar marca d'água, cabeçalho e barras do Streamlit
-st.markdown("""
-    <style>
-        #MainMenu {visibility: hidden;}
-        header {visibility: hidden;}
-        footer {visibility: hidden;}
-        [data-testid="stToolbar"] {visibility: hidden !important;}
-        div[class*="stAppViewerToolbar"] {display: none !important;}
-    </style>
-""", unsafe_allow_html=True)
+
 # Lista oficial das cidades e projetos permitidos
 CIDADES_OFICIAIS = [
     "PARAISOPOLIS",
