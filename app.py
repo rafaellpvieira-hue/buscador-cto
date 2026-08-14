@@ -16,13 +16,20 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Ocultar cabeçalho, menu e botões do Streamlit (Share, Edit, GitHub)
+# Ocultar cabeçalho, menu, botões do Streamlit e badge/ícone flutuante do canto inferior direito
 ocultar_elementos_css = """
     <style>
     #MainMenu {visibility: hidden;}
+    header {visibility: hidden;}
     footer {visibility: hidden;}
-    header[data-testid="stHeader"] {visibility: hidden;}
-    div[data-testid="stToolbar"] {visibility: hidden;}
+    [data-testid="stToolbar"] {visibility: hidden !important;}
+    div[class*="stAppViewerToolbar"] {display: none !important;}
+    
+    /* Remove o ícone/badge flutuante do canto inferior direito */
+    [data-testid="stStatusWidget"] {display: none !important;}
+    div[class*="viewerBadge"] {display: none !important;}
+    a[class*="viewerBadge"] {display: none !important;}
+    [data-testid="stActionButton"] {display: none !important;}
     </style>
 """
 st.markdown(ocultar_elementos_css, unsafe_allow_html=True)
