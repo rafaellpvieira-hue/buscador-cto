@@ -215,7 +215,7 @@ if modo_busca == "🔎 Buscar por Nome / Cidade":
     # Aplicação dos Filtros
     df_filtrado = df.copy()
 
-    if cidade_selecionada != "ALL - Todas as Cidades":
+    if cidade_selecionada != "ALL - Todas as Cidades/Bairro Rural":
         df_filtrado = df_filtrado[df_filtrado["Projeto / Cidade"] == cidade_selecionada]
 
     if termo_cto:
