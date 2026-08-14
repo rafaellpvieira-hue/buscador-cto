@@ -7,6 +7,16 @@ import pandas as pd
 import streamlit as st
 import streamlit.components.v1 as components
 
+# Ocultar marca d'água, cabeçalho e barras do Streamlit
+st.markdown("""
+    <style>
+        #MainMenu {visibility: hidden;}
+        header {visibility: hidden;}
+        footer {visibility: hidden;}
+        [data-testid="stToolbar"] {visibility: hidden !important;}
+        div[class*="stAppViewerToolbar"] {display: none !important;}
+    </style>
+""", unsafe_allow_html=True)
 # 1. Configuração da página
 st.set_page_config(
     page_title="Buscador de CTOs FTTH",
