@@ -14,6 +14,7 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="expanded"
 )
+
 # Ocultar cabeçalho, menu e botões do Streamlit (Share, Edit, GitHub)
 ocultar_elementos_css = """
     <style>
@@ -255,16 +256,44 @@ if modo_busca == "🔎 Buscar por Nome / Cidade":
 else:
     st.subheader("📍 Encontrar CTOs mais próximas da sua posição")
 
-    # Componente HTML/JS para capturar GPS do celular/computador
+    # Componente HTML/JS para capturar GPS do celular/computador com botão de copiar
     html_gps = """
-    <div style="background-color:#1e1e1e; padding:15px; border-radius:10px; color:white; text-align:center;">
-        <button onclick="getGPS()" style="background-color:#4CAF50; color:white; border:none; padding:12px 20px; font-size:16px; border-radius:5px; cursor:pointer; font-weight:bold;">
+    <div style="background-color:#1e1e1e; padding:15px; border-radius:10px; color:white; text-align:center; font-family:sans-serif;">
+        <button onclick="getGPS()" style="background-color:#4CAF50; color:white; border:none; padding:12px 20px; font-size:16px; border-radius:5px; cursor:pointer; font-weight:bold; width:100%; max-width:320px;">
             📡 Obter Minha Localização Atual (GPS)
         </button>
-        <p id="gps_status" style="margin-top:10px; font-size:14px; color:#aaa;">Clique no botão acima para capturar suas coordenadas.</p>
+        <div id="gps_status" style="margin-top:12px; font-size:14px; color:#aaa;">Clique no botão acima para capturar suas coordenadas.</div>
     </div>
 
     <script>
+    function copyToClipboard(text) {
+        if (navigator.clipboard && window.isSecureContext) {
+            navigator.clipboard.writeText(text).then(function() {
+                document.getElementById("copy_status").innerText = "✅ Coordenada copiada! Agora cole no campo abaixo.";
+            }).catch(function() {
+                fallbackCopy(text);
+            });
+        } else {
+            fallbackCopy(text);
+        }
+    }
+
+    function fallbackCopy(text) {
+        var textArea = document.createElement("textarea");
+        textArea.value = text;
+        textArea.style.position = "fixed";
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        try {
+            document.execCommand('copy');
+            document.getElementById("copy_status").innerText = "✅ Coordenada copiada! Agora cole no campo abaixo.";
+        } catch (err) {
+            document.getElementById("copy_status").innerText = "❌ Selecione e copie manualmente.";
+        }
+        document.body.removeChild(textArea);
+    }
+
     function getGPS() {
         var status = document.getElementById("gps_status");
         if (navigator.geolocation) {
@@ -273,10 +302,19 @@ else:
                 function(position) {
                     var lat = position.coords.latitude.toFixed(6);
                     var lon = position.coords.longitude.toFixed(6);
-                    status.innerHTML = "<b style='color:#4CAF50;'>Sua Posição:</b> <br><span style='font-size:18px; color:white;'><b>" + lat + ", " + lon + "</b></span><br><i>Copie os números acima e cole no campo abaixo!</i>";
+                    var coords = lat + ", " + lon;
+                    
+                    status.innerHTML = `
+                        <b style='color:#4CAF50;'>Sua Posição:</b><br>
+                        <span style='font-size:20px; color:white; font-weight:bold;'>${coords}</span><br><br>
+                        <button onclick="copyToClipboard('${coords}')" style="background-color:#2196F3; color:white; border:none; padding:10px 18px; font-size:14px; border-radius:5px; cursor:pointer; font-weight:bold;">
+                            📋 Copiar Coordenadas
+                        </button>
+                        <div id="copy_status" style="margin-top:8px; font-size:13px; color:#ffeb3b; font-weight:bold;"></div>
+                    `;
                 },
                 function(error) {
-                    status.innerHTML = "<span style='color:#ff5555;'>Erro ao obter GPS. Verifique a permissão de localização no navegador/celular.</span>";
+                    status.innerHTML = "<span style='color:#ff5555;'>Erro ao obter GPS. Verifique a permissão de localização no celular.</span>";
                 },
                 { enableHighAccuracy: true, timeout: 10000 }
             );
@@ -286,7 +324,7 @@ else:
     }
     </script>
     """
-    components.html(html_gps, height=140)
+    components.html(html_gps, height=190)
 
     input_coords = st.text_input(
         "Cole aqui suas coordenadas (ex: -22.410920, -45.793186):",
