@@ -16,7 +16,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Ocultar menus, barras do Streamlit e elementos indesejados nas tabelas
+# Ocultar menus, barras do Streamlit e o cabeçalho/título dentro do menu da tabela
 ocultar_elementos_css = """
     <style>
     #MainMenu {visibility: hidden;}
@@ -37,11 +37,10 @@ ocultar_elementos_css = """
         display: none !important;
     }
 
-    /* Oculta o título/nome da coluna e o ícone do topo do menu suspenso da tabela */
-    div[class*="header-menu"] > div:first-child,
-    div[class*="header-menu"] [class*="title"],
-    div[class*="headerMenu"] [class*="title"],
-    div[class*="glide"] [class*="title"] {
+    /* Oculta o título da coluna e o ícone de cópia dentro do menu popover da tabela */
+    [data-baseweb="menu"] > div:first-child,
+    [role="menu"] > div:first-child,
+    div[data-baseweb="popover"] [role="menu"] > div:first-child {
         display: none !important;
     }
     </style>
