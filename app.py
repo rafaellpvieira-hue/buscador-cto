@@ -12,7 +12,16 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="expanded"
 )
-
+# Ocultar cabeçalho, menu e botões do Streamlit (Share, Edit, GitHub)
+ocultar_elementos_css = """
+    <style>
+    #MainMenu {visibility: hidden;}
+    footer {visibility: hidden;}
+    header[data-testid="stHeader"] {visibility: hidden;}
+    div[data-testid="stToolbar"] {visibility: hidden;}
+    </style>
+"""
+st.markdown(ocultar_elementos_css, unsafe_allow_html=True)
 # Lista oficial das cidades e projetos permitidos
 CIDADES_OFICIAIS = [
     "PARAISOPOLIS",
