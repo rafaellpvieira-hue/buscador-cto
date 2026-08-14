@@ -240,6 +240,14 @@ if modo_busca == "🔎 Buscar por Nome / Cidade":
                 )
             }
         )
+        
+        # Bloco de Cópia Rápida caso encontre apenas 1 CTO
+        if len(df_filtrado) == 1:
+            cto_nome = df_filtrado.iloc[0]["Nome da CTO"]
+            coords_texto = df_filtrado.iloc[0]["Coordenadas"]
+            st.write("---")
+            st.markdown(f"📋 **Copiar coordenadas da {cto_nome}:**")
+            st.code(coords_texto, language=None)
     else:
         st.warning("Nenhuma CTO encontrada com os filtros selecionados.")
 
@@ -327,6 +335,10 @@ else:
 
             cto_top = df_prox.iloc[0]
             st.info(f"🏆 **CTO mais próxima:** **{cto_top['Nome da CTO']}** a apenas **{cto_top['Distância']}** de distância!")
+
+            # 📋 BLOCO DE CÓPIA RÁPIDA DA CTO MAIS PRÓXIMA
+            st.markdown(f"📋 **Copiar coordenadas da CTO mais próxima ({cto_top['Nome da CTO']}):**")
+            st.code(cto_top["Coordenadas"], language=None)
 
         else:
             st.error("Formato de coordenadas inválido. Exemplo correto: `-22.410920, -45.793186`")
