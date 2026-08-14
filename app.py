@@ -226,7 +226,7 @@ if modo_busca == "🔎 Buscar por Nome / Cidade":
         cidade_selecionada = st.selectbox("Selecione a Cidade / Projeto:", opcoes_cidades)
 
     with col2:
-        termo_cto = st.text_input("Digite o Nome da CTO (ex: CTO 122):")
+        termo_cto = st.text_input("Digite o Nome da CTO:")
 
     # Aplicação dos Filtros
     df_filtrado = df.copy()
