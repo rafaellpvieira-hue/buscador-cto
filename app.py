@@ -16,7 +16,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Ocultar menus, barras do Streamlit e o menu de 3 pontinhos dos cabeçalhos da tabela
+# Ocultar menus, barras do Streamlit e elementos indesejados nas tabelas
 ocultar_elementos_css = """
     <style>
     #MainMenu {visibility: hidden;}
@@ -31,9 +31,17 @@ ocultar_elementos_css = """
     a[class*="viewerBadge"] {display: none !important;}
     [data-testid="stActionButton"] {display: none !important;}
 
-    /* Remove o menu dos 3 pontinhos (opções) no cabeçalho das tabelas */
+    /* Remove o menu dos 3 pontinhos no cabeçalho das tabelas */
     [data-testid="stDataFrame"] [role="columnheader"] button,
     [data-testid="stDataFrame"] [role="columnheader"] svg {
+        display: none !important;
+    }
+
+    /* Oculta o título/nome da coluna e o ícone do topo do menu suspenso da tabela */
+    div[class*="header-menu"] > div:first-child,
+    div[class*="header-menu"] [class*="title"],
+    div[class*="headerMenu"] [class*="title"],
+    div[class*="glide"] [class*="title"] {
         display: none !important;
     }
     </style>
