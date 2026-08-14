@@ -206,7 +206,7 @@ if modo_busca == "🔎 Buscar por Nome / Cidade":
         cidades_ordenadas = [c for c in CIDADES_OFICIAIS if c in cidades_presentes]
         outras_cidades = [c for c in cidades_presentes if c not in CIDADES_OFICIAIS]
         
-        opcoes_cidades = ["ALL - Todas as Cidades/Bairro Rural"] + cidades_ordenadas + outras_cidades
+        opcoes_cidades = ["Todas as Cidades/Bairro Rural"] + cidades_ordenadas + outras_cidades
         cidade_selecionada = st.selectbox("Selecione a Cidade / Projeto:", opcoes_cidades)
 
     with col2:
@@ -215,7 +215,7 @@ if modo_busca == "🔎 Buscar por Nome / Cidade":
     # Aplicação dos Filtros
     df_filtrado = df.copy()
 
-    if cidade_selecionada != "ALL - Todas as Cidades/Bairro Rural":
+    if cidade_selecionada != "Todas as Cidades/Bairro Rural":
         df_filtrado = df_filtrado[df_filtrado["Projeto / Cidade"] == cidade_selecionada]
 
     if termo_cto:
