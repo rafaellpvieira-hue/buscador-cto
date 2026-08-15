@@ -4,6 +4,8 @@ import xml.etree.ElementTree as ET
 import unicodedata
 import math
 import urllib.parse
+import base64
+import json
 import pandas as pd
 import streamlit as st
 import streamlit.components.v1 as components
@@ -221,7 +223,7 @@ df = pd.DataFrame(todas_ctos)
 
 modo_busca = st.radio(
     "Escolha a opção desejada:",
-    ["🔎 Buscar por Nome / Cidade", "📍 CTO Mais Próxima (Minha Localização)", " Ativação de ONU"],
+    ["🔎 Buscar por Nome / Cidade", "📍 CTO Mais Próxima (Minha Localização)", "⚡ Ativação de ONU"],
     horizontal=True
 )
 
@@ -277,7 +279,6 @@ if modo_busca == "🔎 Buscar por Nome / Cidade":
             }
         )
         
-        # Bloco de ação rápida se houver apenas 1 CTO encontrada
         if len(df_filtrado) == 1:
             cto_nome = df_filtrado.iloc[0]["Nome da CTO"]
             coords_texto = df_filtrado.iloc[0]["Coordenadas"]
@@ -298,7 +299,6 @@ if modo_busca == "🔎 Buscar por Nome / Cidade":
 elif modo_busca == "📍 CTO Mais Próxima (Minha Localização)":
     st.subheader("📍 Encontrar CTOs mais próximas da sua posição")
 
-    # Captura GPS no navegador
     html_gps = """
     <div style="background-color:#1e1e1e; padding:15px; border-radius:10px; color:white; text-align:center; font-family:sans-serif;">
         <button onclick="getGPS()" style="background-color:#4CAF50; color:white; border:none; padding:12px 20px; font-size:16px; border-radius:5px; cursor:pointer; font-weight:bold; width:100%; max-width:320px;">
@@ -429,7 +429,7 @@ elif modo_busca == "📍 CTO Mais Próxima (Minha Localização)":
 
 # MODO 3: ATIVAÇÃO DE ONU
 else:
-    st.subheader(" Ativação de ONU")
+    st.subheader("⚡ Ativação de ONU")
     st.caption("Preencha os dados e tire a foto da ONU para enviar ao suporte")
 
     col_a1, col_a2 = st.columns([1, 1])
@@ -442,6 +442,10 @@ else:
         onu_sn_input = st.text_input("ONU s/n:", placeholder="Ex: ALCLB1234567")
         cidade_input = st.text_input("Cidade:", placeholder="Ex: PARAISOPOLIS")
 
+    b64_foto = ""
+    mime_type = "image/jpeg"
+    nome_foto = "foto_onu.jpg"
+
     with col_a2:
         st.markdown("📷 **Foto da ONU / Etiqueta S/N**")
         foto_capturada = st.file_uploader(
@@ -451,10 +455,14 @@ else:
 
         if foto_capturada:
             st.image(foto_capturada, caption="Foto anexada", use_container_width=True)
+            bytes_foto = foto_capturada.getvalue()
+            b64_foto = base64.b64encode(bytes_foto).decode('utf-8')
+            mime_type = foto_capturada.type or "image/jpeg"
+            nome_foto = foto_capturada.name or "foto_onu.jpg"
 
     # Monta o texto formatado para envio
     texto_whatsapp_onu = (
-        f" *ATIVAÇÃO DE ONU*\n"
+        f"⚡ *ATIVAÇÃO DE ONU*\n"
         f"Protocolo: {protocolo_input}\n"
         f"PPPOE: {pppoe_input}\n"
         f"CTO: {cto_input}\n"
@@ -463,14 +471,83 @@ else:
         f"Cidade: {cidade_input}"
     )
 
-    url_whatsapp_onu = f"https://api.whatsapp.com/send?text={urllib.parse.quote(texto_whatsapp_onu)}"
-
     st.write("---")
     st.markdown("📋 **Texto gerado para o WhatsApp:**")
     st.code(texto_whatsapp_onu, language=None)
 
-    col_btn1, col_btn2 = st.columns([1, 1])
-    with col_btn1:
-        st.link_button("🟢 Enviar Texto no WhatsApp", url_whatsapp_onu)
-    with col_btn2:
-        st.caption("ℹ️ *Ao abrir o WhatsApp, anexe a foto tirada acima junto com a mensagem.*")
+    # Preparar variáveis JSON para o Script HTML
+    texto_json = json.dumps(texto_whatsapp_onu)
+    b64_json = json.dumps(b64_foto)
+    mime_json = json.dumps(mime_type)
+    nome_json = json.dumps(nome_foto)
+
+    html_share = f"""
+    <div style="text-align: center; font-family: sans-serif; margin-top: 10px;">
+        <button id="btnShare" onclick="compartilharComFoto()" style="
+            background-color: #25D366;
+            color: white;
+            border: none;
+            padding: 14px 24px;
+            font-size: 16px;
+            font-weight: bold;
+            border-radius: 8px;
+            cursor: pointer;
+            width: 100%;
+            max-width: 400px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+        ">
+            🟢 Compartilhar Foto + Texto no WhatsApp
+        </button>
+        <div id="shareStatus" style="margin-top: 10px; font-size: 13px; color: #aaa;"></div>
+    </div>
+
+    <script>
+    async function compartilharComFoto() {{
+        const texto = {texto_json};
+        const b64Data = {b64_json};
+        const mimeType = {mime_json};
+        const fileName = {nome_json};
+        const statusDiv = document.getElementById("shareStatus");
+
+        if (b64Data && navigator.share) {{
+            try {{
+                // Converte Base64 para Blob/File nativo do JS
+                const byteCharacters = atob(b64Data);
+                const byteNumbers = new Array(byteCharacters.length);
+                for (let i = 0; i < byteCharacters.length; i++) {{
+                    byteNumbers[i] = byteCharacters.charCodeAt(i);
+                }}
+                const byteArray = new Uint8Array(byteNumbers);
+                const blob = new Blob([byteArray], {{ type: mimeType }});
+                const file = new File([blob], fileName, {{ type: mimeType }});
+
+                if (navigator.canShare && navigator.canShare({{ files: [file] }})) {{
+                    await navigator.share({{
+                        files: [file],
+                        title: 'Ativação de ONU',
+                        text: texto
+                    }});
+                    statusDiv.innerText = "✅ Compartilhado com sucesso!";
+                    return;
+                }}
+            }} catch (err) {{
+                if (err.name !== 'AbortError') {{
+                    console.log("Erro no envio:", err);
+                }} else {{
+                    return;
+                }}
+            }}
+        }}
+
+        // Fallback caso não tenha foto ou o navegador não suporte compartilhamento de arquivos (ex: PC)
+        const textEncoded = encodeURIComponent(texto);
+        window.open("https://api.whatsapp.com/send?text=" + textEncoded, "_blank");
+        if (!b64Data) {{
+            statusDiv.innerText = "⚠️ Nenhuma foto foi anexada. Enviando apenas o texto.";
+        }} else {{
+            statusDiv.innerText = "ℹ️ Abrindo WhatsApp. Anexe a foto manualmente se estiver no computador.";
+        }}
+    }}
+    </script>
+    """
+    components.html(html_share, height=110)
