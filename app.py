@@ -221,7 +221,7 @@ df = pd.DataFrame(todas_ctos)
 
 modo_busca = st.radio(
     "Escolha a opção desejada:",
-    ["🔎 Buscar por Nome / Cidade", "📍 CTO Mais Próxima (Minha Localização)", "⚡ Ativação de ONU"],
+    ["🔎 Buscar por Nome / Cidade", "📍 CTO Mais Próxima (Minha Localização)", " Ativação de ONU"],
     horizontal=True
 )
 
