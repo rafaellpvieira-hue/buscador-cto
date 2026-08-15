@@ -445,18 +445,18 @@ else:
     with col_a2:
         st.markdown("📷 **Foto da ONU / Etiqueta S/N**")
         
-        tab_cam, tab_file = st.tabs(["📸 Tirar Foto (Câmera)", "📁 Escolher da Galeria"])
+        tab_file, tab_cam = st.tabs(["📁 Câmera Nativa / Galeria (Alta Qualidade)", "📸 Câmera Rápida (Web)"])
         
         foto_capturada = None
-        with tab_cam:
-            foto_cam = st.camera_input("Tirar foto da ONU")
-            if foto_cam:
-                foto_capturada = foto_cam
-
         with tab_file:
-            foto_up = st.file_uploader("Upload da Foto", type=["jpg", "jpeg", "png"])
+            foto_up = st.file_uploader("Tire foto com a câmera do celular ou escolha um arquivo", type=["jpg", "jpeg", "png"])
             if foto_up:
                 foto_capturada = foto_up
+
+        with tab_cam:
+            foto_cam = st.camera_input("Tirar foto pelo navegador")
+            if foto_cam:
+                foto_capturada = foto_cam
 
         if foto_capturada:
             st.image(foto_capturada, caption="Foto anexada", use_container_width=True)
