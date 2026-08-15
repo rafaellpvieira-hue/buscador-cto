@@ -83,10 +83,9 @@ def identificar_cidade_oficial(stack):
 def gerar_link_whatsapp(nome_cto, cidade, coordenadas, maps_url):
     """ Gera link formatado para envio direto via WhatsApp """
     mensagem = (
-        f"📍 *CTO Identificada:* {nome_cto}\n"
-        f"🏙️ *Cidade / Projeto:* {cidade}\n"
-        f"🌐 *Coordenadas:* {coordenadas}\n"
-        f"🗺️ *Rota GPS:* {maps_url}"
+        f"📍 *Bater CTO:* {nome_cto}\n"
+        f"🏙️ *Cidade / Projeto:*:         \n"
+    
     )
     mensagem_enc = urllib.parse.quote(mensagem)
     return f"https://api.whatsapp.com/send?text={mensagem_enc}"
