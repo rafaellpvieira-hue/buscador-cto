@@ -3,6 +3,7 @@ import zipfile
 import xml.etree.ElementTree as ET
 import unicodedata
 import math
+import urllib.parse
 import pandas as pd
 import streamlit as st
 import streamlit.components.v1 as components
@@ -16,7 +17,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Ocultar menus, barras do Streamlit e desativar o menu das colunas da tabela
+# Ocultar menus e ajustar estilo CSS
 ocultar_elementos_css = """
     <style>
     #MainMenu {visibility: hidden;}
@@ -25,13 +26,13 @@ ocultar_elementos_css = """
     [data-testid="stToolbar"] {visibility: hidden !important;}
     div[class*="stAppViewerToolbar"] {display: none !important;}
     
-    /* Remove o ícone/badge flutuante do canto inferior direito */
+    /* Ocultar badges de status */
     [data-testid="stStatusWidget"] {display: none !important;}
     div[class*="viewerBadge"] {display: none !important;}
     a[class*="viewerBadge"] {display: none !important;}
     [data-testid="stActionButton"] {display: none !important;}
 
-    /* DESATIVA E REMOVE O MENU DAS COLUNAS DA TABELA COMPLETAMENTE */
+    /* Oculta/desativa o menu flutuante das colunas da tabela */
     div[role="menu"],
     [data-baseweb="popover"]:has([role="menu"]) {
         display: none !important;
@@ -66,7 +67,7 @@ CIDADES_OFICIAIS = [
 def normalizar(texto):
     if not texto:
         return ""
-    nfkd = unicodedata.normalize('NFD', texto)
+    nfkd = unicodedata.normalize('NFD', str(texto))
     sem_acento = ''.join([c for c in nfkd if unicodedata.category(c) != 'Mn'])
     return sem_acento.lower().strip()
 
@@ -78,6 +79,17 @@ def identificar_cidade_oficial(stack):
             if norm_oficial == norm_folder or norm_oficial in norm_folder or norm_folder in norm_oficial:
                 return cidade_oficial
     return "OUTROS / NÃO IDENTIFICADO"
+
+def gerar_link_whatsapp(nome_cto, cidade, coordenadas, maps_url):
+    """ Gera link formatado para envio direto via WhatsApp """
+    mensagem = (
+        f"📍 *CTO Identificada:* {nome_cto}\n"
+        f"🏙️ *Cidade / Projeto:* {cidade}\n"
+        f"🌐 *Coordenadas:* {coordenadas}\n"
+        f"🗺️ *Rota GPS:* {maps_url}"
+    )
+    mensagem_enc = urllib.parse.quote(mensagem)
+    return f"https://api.whatsapp.com/send?text={mensagem_enc}"
 
 def parse_element(element, container_stack=None):
     if container_stack is None:
@@ -116,37 +128,42 @@ def processar_bytes_kml_kmz(conteudo_bytes, nome_arquivo):
     ext = os.path.splitext(nome_arquivo)[1].lower()
     kmls_bytes = []
 
-    if ext == ".kml":
-        kmls_bytes.append(conteudo_bytes)
-    elif ext == ".kmz":
-        import io
-        with zipfile.ZipFile(io.BytesIO(conteudo_bytes), 'r') as z:
-            kmls = [f for f in z.namelist() if f.lower().endswith('.kml')]
-            for kml_filename in kmls:
-                kmls_bytes.append(z.read(kml_filename))
+    try:
+        if ext == ".kml":
+            kmls_bytes.append(conteudo_bytes)
+        elif ext == ".kmz":
+            import io
+            with zipfile.ZipFile(io.BytesIO(conteudo_bytes), 'r') as z:
+                kmls = [f for f in z.namelist() if f.lower().endswith('.kml')]
+                for kml_filename in kmls:
+                    kmls_bytes.append(z.read(kml_filename))
 
-    for kml_byte in kmls_bytes:
-        root = ET.fromstring(kml_byte)
-        placemarks = parse_element(root)
+        for kml_byte in kmls_bytes:
+            root = ET.fromstring(kml_byte)
+            placemarks = parse_element(root)
 
-        for cto_name, lat, lon, stack in placemarks:
-            cidade_nome = identificar_cidade_oficial(stack)
-            maps_url = f"https://www.google.com/maps?q={lat},{lon}"
-            
-            ctos_list.append({
-                "Projeto / Cidade": cidade_nome,
-                "Nome da CTO": cto_name,
-                "Latitude": lat,
-                "Longitude": lon,
-                "Coordenadas": f"{lat:.6f}, {lon:.6f}",
-                "Rota no GPS": maps_url
-            })
+            for cto_name, lat, lon, stack in placemarks:
+                cidade_nome = identificar_cidade_oficial(stack)
+                coords_str = f"{lat:.6f}, {lon:.6f}"
+                maps_url = f"https://www.google.com/maps?q={lat},{lon}"
+                wsp_url = gerar_link_whatsapp(cto_name, cidade_nome, coords_str, maps_url)
+                
+                ctos_list.append({
+                    "Projeto / Cidade": cidade_nome,
+                    "Nome da CTO": cto_name,
+                    "Latitude": lat,
+                    "Longitude": lon,
+                    "Coordenadas": coords_str,
+                    "Rota no GPS": maps_url,
+                    "WhatsApp": wsp_url
+                })
+    except Exception as e:
+        st.error(f"Erro ao processar o arquivo {nome_arquivo}: {e}")
 
     return ctos_list
 
-# Função matemática para calcular a distância exata em metros entre duas coordenadas
 def calcular_distancia_metros(lat1, lon1, lat2, lon2):
-    R = 6371000  # Raio da Terra em metros
+    R = 6371000
     dlat = math.radians(lat2 - lat1)
     dlon = math.radians(lon2 - lon1)
     a = (math.sin(dlat / 2) ** 2 +
@@ -155,7 +172,6 @@ def calcular_distancia_metros(lat1, lon1, lat2, lon2):
     return R * c
 
 def extrair_lat_lon(texto):
-    """ Extrai latitude e longitude do texto digitado """
     try:
         partes = texto.replace(" ", "").split(",")
         if len(partes) >= 2:
@@ -167,19 +183,21 @@ def extrair_lat_lon(texto):
 # ==================== INTERFACE GRÁFICA ====================
 
 st.title("🔍 Buscador de CTOs - FTTH")
-st.caption("Consulte a localização de caixas ópticas no computador ou smartphone")
+st.caption("Consulte e compartilhe a localização de caixas ópticas com a equipe")
 
 todas_ctos = []
 
-# 1. Carrega automaticamente qualquer arquivo .kmz ou .kml da pasta da aplicação
+# 1. Carrega arquivos do repositório
 arquivos_repositorio = [f for f in os.listdir('.') if f.lower().endswith(('.kmz', '.kml'))]
-
 for nome_arq in arquivos_repositorio:
-    with open(nome_arq, 'rb') as f:
-        ctos = processar_bytes_kml_kmz(f.read(), nome_arq)
-        todas_ctos.extend(ctos)
+    try:
+        with open(nome_arq, 'rb') as f:
+            ctos = processar_bytes_kml_kmz(f.read(), nome_arq)
+            todas_ctos.extend(ctos)
+    except Exception as e:
+        st.warning(f"Não foi possível carregar {nome_arq}: {e}")
 
-# 2. Permite uploads adicionais na barra lateral
+# 2. Uploads manuais adicionais
 st.sidebar.header("📁 Gerenciar Arquivos")
 uploaded_files = st.sidebar.file_uploader(
     "Enviar KMZ/KML adicional",
@@ -194,15 +212,12 @@ if uploaded_files:
 
 st.sidebar.metric("Total de CTOs no Sistema", len(todas_ctos))
 
-# Trava de segurança
 if not todas_ctos:
     st.info("👈 Nenhum arquivo KMZ/KML encontrado. Adicione os arquivos no GitHub ou faça upload ao lado.")
     st.stop()
 
-# Monta o DataFrame
 df = pd.DataFrame(todas_ctos)
 
-# Seleção do Modo de Busca
 modo_busca = st.radio(
     "Escolha o modo de busca:",
     ["🔎 Buscar por Nome / Cidade", "📍 CTO Mais Próxima (Minha Localização)"],
@@ -211,9 +226,8 @@ modo_busca = st.radio(
 
 st.write("---")
 
-# MODO 1: BUSCA POR FILTROS TRADICIONAIS
+# MODO 1: BUSCA POR FILTROS
 if modo_busca == "🔎 Buscar por Nome / Cidade":
-    # Filtros na Tela Principal
     st.subheader("🔎 Filtros de Busca")
     col1, col2 = st.columns([1, 1])
 
@@ -226,9 +240,8 @@ if modo_busca == "🔎 Buscar por Nome / Cidade":
         cidade_selecionada = st.selectbox("Selecione a Cidade / Projeto:", opcoes_cidades)
 
     with col2:
-        termo_cto = st.text_input("Digite o Nome da CTO:")
+        termo_cto = st.text_input("Digite o Nome da CTO (ex: CTO 122):")
 
-    # Aplicação dos Filtros
     df_filtrado = df.copy()
 
     if cidade_selecionada != "Todas as Cidades/Bairro Rural":
@@ -240,31 +253,43 @@ if modo_busca == "🔎 Buscar por Nome / Cidade":
             df_filtrado["Nome da CTO"].apply(lambda x: termo_norm in normalizar(str(x)))
         ]
 
-    # Exibição dos Resultados
     st.subheader(f"📍 Resultados ({len(df_filtrado)} CTOs encontradas)")
 
     if not df_filtrado.empty:
         st.dataframe(
-            df_filtrado[["Projeto / Cidade", "Nome da CTO", "Coordenadas", "Rota no GPS"]],
+            df_filtrado[["Projeto / Cidade", "Nome da CTO", "Coordenadas", "Rota no GPS", "WhatsApp"]],
             use_container_width=True,
             hide_index=True,
             column_config={
                 "Rota no GPS": st.column_config.LinkColumn(
                     "Abrir no GPS",
-                    help="Clique para abrir a localização direto no Google Maps/Waze",
+                    help="Clique para abrir a localização direto no Google Maps",
                     validate="^https://",
                     display_text="🗺️ Abrir no Mapa"
+                ),
+                "WhatsApp": st.column_config.LinkColumn(
+                    "WhatsApp",
+                    help="Enviar dados desta CTO pelo WhatsApp",
+                    validate="^https://",
+                    display_text="📲 Compartilhar"
                 )
             }
         )
         
-        # Bloco de Cópia Rápida caso encontre apenas 1 CTO
+        # Bloco de ação rápida se houver apenas 1 CTO encontrada
         if len(df_filtrado) == 1:
             cto_nome = df_filtrado.iloc[0]["Nome da CTO"]
             coords_texto = df_filtrado.iloc[0]["Coordenadas"]
+            wsp_link = df_filtrado.iloc[0]["WhatsApp"]
+            
             st.write("---")
-            st.markdown(f"📋 **Copiar coordenadas da {cto_nome}:**")
-            st.code(coords_texto, language=None)
+            col_c1, col_c2 = st.columns([1, 1])
+            with col_c1:
+                st.markdown(f"📋 **Copiar coordenadas da {cto_nome}:**")
+                st.code(coords_texto, language=None)
+            with col_c2:
+                st.markdown(f"📲 **Enviar para o WhatsApp:**")
+                st.link_button("🟢 Compartilhar no WhatsApp", wsp_link)
     else:
         st.warning("Nenhuma CTO encontrada com os filtros selecionados.")
 
@@ -272,7 +297,7 @@ if modo_busca == "🔎 Buscar por Nome / Cidade":
 else:
     st.subheader("📍 Encontrar CTOs mais próximas da sua posição")
 
-    # Componente HTML/JS para capturar GPS do celular/computador com botão de copiar
+    # Captura GPS no navegador
     html_gps = """
     <div style="background-color:#1e1e1e; padding:15px; border-radius:10px; color:white; text-align:center; font-family:sans-serif;">
         <button onclick="getGPS()" style="background-color:#4CAF50; color:white; border:none; padding:12px 20px; font-size:16px; border-radius:5px; cursor:pointer; font-weight:bold; width:100%; max-width:320px;">
@@ -286,12 +311,8 @@ else:
         if (navigator.clipboard && window.isSecureContext) {
             navigator.clipboard.writeText(text).then(function() {
                 document.getElementById("copy_status").innerText = "✅ Coordenada copiada! Agora cole no campo abaixo.";
-            }).catch(function() {
-                fallbackCopy(text);
-            });
-        } else {
-            fallbackCopy(text);
-        }
+            }).catch(function() { fallbackCopy(text); });
+        } else { fallbackCopy(text); }
     }
 
     function fallbackCopy(text) {
@@ -355,13 +376,11 @@ else:
         if user_lat is not None and user_lon is not None:
             df_prox = df.copy()
 
-            # Cálculo da distância de cada CTO
             df_prox["dist_m"] = df_prox.apply(
                 lambda row: calcular_distancia_metros(user_lat, user_lon, row["Latitude"], row["Longitude"]),
                 axis=1
             )
 
-            # Ordena da menor para a maior distância
             df_prox = df_prox.sort_values(by="dist_m").head(qtd_mostrar)
 
             def formatar_distancia(m):
@@ -374,7 +393,7 @@ else:
             st.success(f"🎯 Mostrando as {len(df_prox)} CTOs mais próximas de você:")
 
             st.dataframe(
-                df_prox[["Distância", "Nome da CTO", "Projeto / Cidade", "Coordenadas", "Rota no GPS"]],
+                df_prox[["Distância", "Nome da CTO", "Projeto / Cidade", "Coordenadas", "Rota no GPS", "WhatsApp"]],
                 use_container_width=True,
                 hide_index=True,
                 column_config={
@@ -383,6 +402,12 @@ else:
                         help="Clique para traçar a rota até a CTO",
                         validate="^https://",
                         display_text="🗺️ Traçar Rota"
+                    ),
+                    "WhatsApp": st.column_config.LinkColumn(
+                        "WhatsApp",
+                        help="Enviar dados desta CTO pelo WhatsApp",
+                        validate="^https://",
+                        display_text="📲 Compartilhar"
                     )
                 }
             )
@@ -390,9 +415,13 @@ else:
             cto_top = df_prox.iloc[0]
             st.info(f"🏆 **CTO mais próxima:** **{cto_top['Nome da CTO']}** a apenas **{cto_top['Distância']}** de distância!")
 
-            # 📋 BLOCO DE CÓPIA RÁPIDA DA CTO MAIS PRÓXIMA
-            st.markdown(f"📋 **Copiar coordenadas da CTO mais próxima ({cto_top['Nome da CTO']}):**")
-            st.code(cto_top["Coordenadas"], language=None)
+            col_p1, col_p2 = st.columns([1, 1])
+            with col_p1:
+                st.markdown(f"📋 **Copiar coordenadas da CTO mais próxima ({cto_top['Nome da CTO']}):**")
+                st.code(cto_top["Coordenadas"], language=None)
+            with col_p2:
+                st.markdown(f"📲 **Enviar para o WhatsApp:**")
+                st.link_button("🟢 Compartilhar no WhatsApp", cto_top["WhatsApp"])
 
         else:
             st.error("Formato de coordenadas inválido. Exemplo correto: `-22.410920, -45.793186`")
