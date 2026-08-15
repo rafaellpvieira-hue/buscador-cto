@@ -482,36 +482,84 @@ else:
     nome_json = json.dumps(nome_foto)
 
     html_share = f"""
-    <div style="text-align: center; font-family: sans-serif; margin-top: 10px;">
-        <button id="btnShare" onclick="compartilharComFoto()" style="
+    <div style="font-family: sans-serif; display: flex; flex-direction: column; align-items: center; gap: 10px;">
+        <button onclick="abrirDiretoWhatsapp()" style="
             background-color: #25D366;
             color: white;
             border: none;
-            padding: 14px 24px;
+            padding: 14px 20px;
             font-size: 16px;
             font-weight: bold;
             border-radius: 8px;
             cursor: pointer;
             width: 100%;
-            max-width: 400px;
+            max-width: 450px;
             box-shadow: 0 4px 6px rgba(0,0,0,0.2);
         ">
-            🟢 Compartilhar Foto + Texto no WhatsApp
+            🟢 1. Abrir Direto no WhatsApp (Foto Copiada)
         </button>
-        <div id="shareStatus" style="margin-top: 10px; font-size: 13px; color: #aaa;"></div>
+
+        <button onclick="compartilharNative()" style="
+            background-color: #0088cc;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            font-size: 14px;
+            font-weight: bold;
+            border-radius: 8px;
+            cursor: pointer;
+            width: 100%;
+            max-width: 450px;
+        ">
+            📲 2. Compartilhar Imagem + Texto (Menu do Celular)
+        </button>
+
+        <div id="shareStatus" style="font-size: 13px; color: #ffeb3b; text-align: center; max-width: 450px; font-weight: bold;"></div>
     </div>
 
     <script>
-    async function compartilharComFoto() {{
-        const texto = {texto_json};
-        const b64Data = {b64_json};
-        const mimeType = {mime_json};
-        const fileName = {nome_json};
-        const statusDiv = document.getElementById("shareStatus");
+    const texto = {texto_json};
+    const b64Data = {b64_json};
+    const mimeType = {mime_json};
+    const fileName = {nome_json};
 
+    async function abrirDiretoWhatsapp() {{
+        const statusDiv = document.getElementById("shareStatus");
+        
+        if (b64Data) {{
+            try {{
+                // Converte Base64 para Blob de imagem
+                const byteCharacters = atob(b64Data);
+                const byteNumbers = new Array(byteCharacters.length);
+                for (let i = 0; i < byteCharacters.length; i++) {{
+                    byteNumbers[i] = byteCharacters.charCodeAt(i);
+                }}
+                const byteArray = new Uint8Array(byteNumbers);
+                const blob = new Blob([byteArray], {{ type: mimeType }});
+
+                // Copia a foto para a área de transferência do celular
+                await navigator.clipboard.write([
+                    new ClipboardItem({{ [mimeType]: blob }})
+                ]);
+                statusDiv.innerHTML = "✅ <b>Foto copiada!</b> Abrindo o WhatsApp... Toque na conversa e escolha <b>'Colar'</b> para anexar a foto.";
+            }} catch (e) {{
+                statusDiv.innerHTML = "ℹ️ Abrindo WhatsApp com o texto. Anexe a foto manualmente se necessário.";
+            }}
+        }} else {{
+            statusDiv.innerHTML = "⚡ Abrindo WhatsApp...";
+        }}
+
+        // Abre diretamente o WhatsApp com o texto preenchido
+        setTimeout(() => {{
+            const url = "https://api.whatsapp.com/send?text=" + encodeURIComponent(texto);
+            window.open(url, "_blank");
+        }}, 400);
+    }}
+
+    async function compartilharNative() {{
+        const statusDiv = document.getElementById("shareStatus");
         if (b64Data && navigator.share) {{
             try {{
-                // Converte Base64 para Blob/File nativo do JS
                 const byteCharacters = atob(b64Data);
                 const byteNumbers = new Array(byteCharacters.length);
                 for (let i = 0; i < byteCharacters.length; i++) {{
@@ -527,27 +575,20 @@ else:
                         title: 'Ativação de ONU',
                         text: texto
                     }});
-                    statusDiv.innerText = "✅ Compartilhado com sucesso!";
+                    statusDiv.innerText = "✅ Compartilhado!";
                     return;
                 }}
             }} catch (err) {{
                 if (err.name !== 'AbortError') {{
-                    console.log("Erro no envio:", err);
-                }} else {{
-                    return;
+                    console.log("Erro:", err);
                 }}
             }}
         }}
-
-        // Fallback caso não tenha foto ou o navegador não suporte compartilhamento de arquivos (ex: PC)
-        const textEncoded = encodeURIComponent(texto);
-        window.open("https://api.whatsapp.com/send?text=" + textEncoded, "_blank");
-        if (!b64Data) {{
-            statusDiv.innerText = "⚠️ Nenhuma foto foi anexada. Enviando apenas o texto.";
-        }} else {{
-            statusDiv.innerText = "ℹ️ Abrindo WhatsApp. Anexe a foto manualmente se estiver no computador.";
-        }}
+        
+        // Fallback
+        const url = "https://api.whatsapp.com/send?text=" + encodeURIComponent(texto);
+        window.open(url, "_blank");
     }}
     </script>
     """
-    components.html(html_share, height=110)
+    components.html(html_share, height=160)
