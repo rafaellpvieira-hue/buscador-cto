@@ -86,7 +86,8 @@ def gerar_link_whatsapp(nome_cto, cidade, coordenadas, maps_url):
         f"📍 *Bater CTO:* {nome_cto}\n"
         f"  *Cidade:* \n"
         f"  *Protocolo:* \n"
-      
+        f"🌐 *Coordenadas:* {coordenadas}\n"
+        f"🗺️ *Rota GPS:* {maps_url}"
     )
     mensagem_enc = urllib.parse.quote(mensagem)
     return f"https://api.whatsapp.com/send?text={mensagem_enc}"
@@ -182,8 +183,8 @@ def extrair_lat_lon(texto):
 
 # ==================== INTERFACE GRÁFICA ====================
 
-st.title("🔍 Buscador de CTOs - FTTH")
-st.caption("Consulte e compartilhe a localização de caixas ópticas com a equipe")
+st.title("🔍 Buscador de CTOs & Ativação FTTH")
+st.caption("Consulte localização de CTOs e envie dados de ativação para o suporte")
 
 todas_ctos = []
 
@@ -219,8 +220,8 @@ if not todas_ctos:
 df = pd.DataFrame(todas_ctos)
 
 modo_busca = st.radio(
-    "Escolha o modo de busca:",
-    ["🔎 Buscar por Nome / Cidade", "📍 CTO Mais Próxima (Minha Localização)"],
+    "Escolha a opção desejada:",
+    ["🔎 Buscar por Nome / Cidade", "📍 CTO Mais Próxima (Minha Localização)", "⚡ Ativação de ONU"],
     horizontal=True
 )
 
@@ -294,7 +295,7 @@ if modo_busca == "🔎 Buscar por Nome / Cidade":
         st.warning("Nenhuma CTO encontrada com os filtros selecionados.")
 
 # MODO 2: CTO MAIS PRÓXIMA POR GPS
-else:
+elif modo_busca == "📍 CTO Mais Próxima (Minha Localização)":
     st.subheader("📍 Encontrar CTOs mais próximas da sua posição")
 
     # Captura GPS no navegador
@@ -425,3 +426,60 @@ else:
 
         else:
             st.error("Formato de coordenadas inválido. Exemplo correto: `-22.410920, -45.793186`")
+
+# MODO 3: ATIVAÇÃO DE ONU
+else:
+    st.subheader("⚡ Ativação de ONU")
+    st.caption("Preencha os dados e tire a foto da ONU para enviar ao suporte")
+
+    col_a1, col_a2 = st.columns([1, 1])
+
+    with col_a1:
+        protocolo_input = st.text_input("Protocolo:", placeholder="Ex: 2026081501")
+        pppoe_input = st.text_input("PPPOE:", placeholder="Ex: cliente_fibra123")
+        cto_input = st.text_input("CTO:", placeholder="Ex: CTO 122")
+        porta_input = st.text_input("PORTA:", placeholder="Ex: 04")
+        onu_sn_input = st.text_input("ONU s/n:", placeholder="Ex: ALCLB1234567")
+        cidade_input = st.selectbox("Cidade:", [""] + CIDADES_OFICIAIS)
+
+    with col_a2:
+        st.markdown("📷 **Foto da ONU / Etiqueta S/N**")
+        
+        tab_cam, tab_file = st.tabs(["📸 Tirar Foto (Câmera)", "📁 Escolher da Galeria"])
+        
+        foto_capturada = None
+        with tab_cam:
+            foto_cam = st.camera_input("Tirar foto da ONU")
+            if foto_cam:
+                foto_capturada = foto_cam
+
+        with tab_file:
+            foto_up = st.file_uploader("Upload da Foto", type=["jpg", "jpeg", "png"])
+            if foto_up:
+                foto_capturada = foto_up
+
+        if foto_capturada:
+            st.image(foto_capturada, caption="Foto anexada", use_column_width=True)
+
+    # Monta o texto formatado para envio
+    texto_whatsapp_onu = (
+        f"⚡ *ATIVAÇÃO DE ONU*\n"
+        f"Protocolo: {protocolo_input}\n"
+        f"PPPOE: {pppoe_input}\n"
+        f"CTO: {cto_input}\n"
+        f"PORTA: {porta_input}\n"
+        f"ONU s/n: {onu_sn_input}\n"
+        f"Cidade: {cidade_input}"
+    )
+
+    url_whatsapp_onu = f"https://api.whatsapp.com/send?text={urllib.parse.quote(texto_whatsapp_onu)}"
+
+    st.write("---")
+    st.markdown("📋 **Texto gerado para o WhatsApp:**")
+    st.code(texto_whatsapp_onu, language=None)
+
+    col_btn1, col_btn2 = st.columns([1, 1])
+    with col_btn1:
+        st.link_button("🟢 Enviar Texto no WhatsApp", url_whatsapp_onu)
+    with col_btn2:
+        st.caption("ℹ️ *Ao abrir o WhatsApp, anexe a foto tirada acima junto com a mensagem.*")
