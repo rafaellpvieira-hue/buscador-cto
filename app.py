@@ -82,14 +82,12 @@ def identificar_cidade_oficial(stack):
                 return cidade_oficial
     return "OUTROS / NÃO IDENTIFICADO"
 
-def gerar_link_whatsapp(nome_cto, cidade, coordenadas, maps_url):
-    """ Gera link formatado para envio direto via WhatsApp """
+def gerar_link_whatsapp(nome_cto, cidade="", coordenadas="", maps_url=""):
+    """ Gera link formatado para envio direto via WhatsApp (apenas Bater CTO, Cidade e Protocolo) """
     mensagem = (
         f"📍 *Bater CTO:* {nome_cto}\n"
         f"  *Cidade:* \n"
-        f"  *Protocolo:* \n"
-        f"🌐 *Coordenadas:* {coordenadas}\n"
-        f"🗺️ *Rota GPS:* {maps_url}"
+        f"  *Protocolo:* "
     )
     mensagem_enc = urllib.parse.quote(mensagem)
     return f"https://api.whatsapp.com/send?text={mensagem_enc}"
@@ -471,7 +469,7 @@ else:
             mime_type = foto_capturada.type or "image/jpeg"
             nome_foto = foto_capturada.name or "foto_onu.jpg"
 
-    # Monta o texto formatado para envio (sem o ícone ⚡)
+    # Monta o texto formatado para envio
     if tipo_operacao == "Remover e Ativar ONU":
         texto_whatsapp_onu = (
             f"*REMOVER E ATIVAR ONU*\n"
