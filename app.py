@@ -429,7 +429,7 @@ elif modo_busca == "📍 CTO Mais Próxima (Minha Localização)":
 
 # MODO 3: ATIVAÇÃO DE ONU
 else:
-    st.subheader("⚡ Ativação de ONU")
+    st.subheader(" Ativação de ONU")
     st.caption("Preencha os dados e tire a foto da ONU para enviar ao suporte")
 
     col_a1, col_a2 = st.columns([1, 1])
@@ -454,7 +454,7 @@ else:
 
     # Monta o texto formatado para envio
     texto_whatsapp_onu = (
-        f"⚡ *ATIVAÇÃO DE ONU*\n"
+        f" *ATIVAÇÃO DE ONU*\n"
         f"Protocolo: {protocolo_input}\n"
         f"PPPOE: {pppoe_input}\n"
         f"CTO: {cto_input}\n"
