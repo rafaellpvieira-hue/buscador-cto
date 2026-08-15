@@ -84,7 +84,7 @@ def gerar_link_whatsapp(nome_cto, cidade, coordenadas, maps_url):
     """ Gera link formatado para envio direto via WhatsApp """
     mensagem = (
         f"📍 *Bater CTO:* {nome_cto}\n"
-        f"   *Cidade / Projeto:*:         \n"
+        f"   *Cidade:*:            \n"
     
     )
     mensagem_enc = urllib.parse.quote(mensagem)
