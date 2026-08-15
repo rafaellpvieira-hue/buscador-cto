@@ -440,7 +440,7 @@ else:
         cto_input = st.text_input("CTO:", placeholder="Ex: CTO 122")
         porta_input = st.text_input("PORTA:", placeholder="Ex: 04")
         onu_sn_input = st.text_input("ONU s/n:", placeholder="Ex: ALCLB1234567")
-        cidade_input = st.selectbox("Cidade:", [""] + CIDADES_OFICIAIS)
+        cidade_input = st.text_input("Cidade:", placeholder="Ex: PARAISOPOLIS")
 
     with col_a2:
         st.markdown("📷 **Foto da ONU / Etiqueta S/N**")
