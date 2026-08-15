@@ -223,7 +223,7 @@ df = pd.DataFrame(todas_ctos)
 
 modo_busca = st.radio(
     "Escolha a opção desejada:",
-    ["🔎 Buscar por Nome / Cidade", "📍 CTO Mais Próxima (Minha Localização)", "⚡ Ativação de ONU"],
+    ["🔎 Buscar por Nome / Cidade", "📍 CTO Mais Próxima (Minha Localização)", "Ativação / Remoção de ONU"],
     horizontal=True
 )
 
@@ -429,7 +429,7 @@ elif modo_busca == "📍 CTO Mais Próxima (Minha Localização)":
 
 # MODO 3: ATIVAÇÃO DE ONU
 else:
-    st.subheader("⚡ Ativação / Remoção de ONU")
+    st.subheader("Ativação / Remoção de ONU")
     st.caption("Escolha a operação, preencha os dados e tire a foto da ONU para enviar ao suporte")
 
     # Opção para escolher o tipo de ação
@@ -446,8 +446,12 @@ else:
         pppoe_input = st.text_input("PPPOE:", placeholder="Ex: cliente_fibra123")
         cto_input = st.text_input("CTO:", placeholder="Ex: CTO 122")
         porta_input = st.text_input("PORTA:", placeholder="Ex: 04")
-        onu_sn_input = st.text_input("ONU s/n:", placeholder="Ex: ALCLB1234567")
-        cidade_input = st.text_input("Cidade:", placeholder="Ex: PARAISOPOLIS")
+        
+        if tipo_operacao == "Remover e Ativar ONU":
+            onu_sn_input = st.text_input("ONU NOVA s/n:", placeholder="Ex: ALCLB1234567")
+        else:
+            onu_sn_input = st.text_input("ONU s/n:", placeholder="Ex: ALCLB1234567")
+            cidade_input = st.text_input("Cidade:", placeholder="Ex: PARAISOPOLIS")
 
     b64_foto = ""
     mime_type = "image/jpeg"
@@ -467,22 +471,26 @@ else:
             mime_type = foto_capturada.type or "image/jpeg"
             nome_foto = foto_capturada.name or "foto_onu.jpg"
 
-    # Define o cabeçalho dinâmico baseado na opção selecionada
+    # Monta o texto formatado para envio (sem o ícone ⚡)
     if tipo_operacao == "Remover e Ativar ONU":
-        titulo_mensagem = "⚡ *REMOVER E ATIVAR ONU*"
+        texto_whatsapp_onu = (
+            f"*REMOVER E ATIVAR ONU*\n"
+            f"Protocolo: {protocolo_input}\n"
+            f"PPPOE: {pppoe_input}\n"
+            f"CTO: {cto_input}\n"
+            f"PORTA: {porta_input}\n"
+            f"ONU NOVA s/n: {onu_sn_input}"
+        )
     else:
-        titulo_mensagem = "⚡ *ATIVAÇÃO DE ONU*"
-
-    # Monta o texto formatado para envio
-    texto_whatsapp_onu = (
-        f"{titulo_mensagem}\n"
-        f"Protocolo: {protocolo_input}\n"
-        f"PPPOE: {pppoe_input}\n"
-        f"CTO: {cto_input}\n"
-        f"PORTA: {porta_input}\n"
-        f"ONU s/n: {onu_sn_input}\n"
-        f"Cidade: {cidade_input}"
-    )
+        texto_whatsapp_onu = (
+            f"*ATIVAÇÃO DE ONU*\n"
+            f"Protocolo: {protocolo_input}\n"
+            f"PPPOE: {pppoe_input}\n"
+            f"CTO: {cto_input}\n"
+            f"PORTA: {porta_input}\n"
+            f"ONU s/n: {onu_sn_input}\n"
+            f"Cidade: {cidade_input}"
+        )
 
     st.write("---")
     st.markdown("📋 **Texto gerado para o WhatsApp:**")
@@ -541,7 +549,6 @@ else:
         
         if (b64Data) {{
             try {{
-                // Converte Base64 para Blob de imagem
                 const byteCharacters = atob(b64Data);
                 const byteNumbers = new Array(byteCharacters.length);
                 for (let i = 0; i < byteCharacters.length; i++) {{
@@ -550,7 +557,6 @@ else:
                 const byteArray = new Uint8Array(byteNumbers);
                 const blob = new Blob([byteArray], {{ type: mimeType }});
 
-                // Copia a foto para a área de transferência do celular
                 await navigator.clipboard.write([
                     new ClipboardItem({{ [mimeType]: blob }})
                 ]);
@@ -559,10 +565,9 @@ else:
                 statusDiv.innerHTML = "ℹ️ Abrindo WhatsApp com o texto. Anexe a foto manualmente se necessário.";
             }}
         }} else {{
-            statusDiv.innerHTML = "⚡ Abrindo WhatsApp...";
+            statusDiv.innerHTML = "Abrindo WhatsApp...";
         }}
 
-        // Abre diretamente o WhatsApp com o texto preenchido
         setTimeout(() => {{
             const url = "https://api.whatsapp.com/send?text=" + encodeURIComponent(texto);
             window.open(url, "_blank");
@@ -585,7 +590,7 @@ else:
                 if (navigator.canShare && navigator.canShare({{ files: [file] }})) {{
                     await navigator.share({{
                         files: [file],
-                        title: 'Ativação de ONU',
+                        title: 'Envio ONU',
                         text: texto
                     }});
                     statusDiv.innerText = "✅ Compartilhado!";
@@ -598,7 +603,6 @@ else:
             }}
         }}
         
-        // Fallback
         const url = "https://api.whatsapp.com/send?text=" + encodeURIComponent(texto);
         window.open(url, "_blank");
     }}
