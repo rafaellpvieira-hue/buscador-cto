@@ -429,8 +429,15 @@ elif modo_busca == "📍 CTO Mais Próxima (Minha Localização)":
 
 # MODO 3: ATIVAÇÃO DE ONU
 else:
-    st.subheader("⚡ Ativação de ONU")
-    st.caption("Preencha os dados e tire a foto da ONU para enviar ao suporte")
+    st.subheader("⚡ Ativação / Remoção de ONU")
+    st.caption("Escolha a operação, preencha os dados e tire a foto da ONU para enviar ao suporte")
+
+    # Opção para escolher o tipo de ação
+    tipo_operacao = st.radio(
+        "Selecione o tipo de operação:",
+        ["Ativação de ONU", "Remover e Ativar ONU"],
+        horizontal=True
+    )
 
     col_a1, col_a2 = st.columns([1, 1])
 
@@ -460,9 +467,15 @@ else:
             mime_type = foto_capturada.type or "image/jpeg"
             nome_foto = foto_capturada.name or "foto_onu.jpg"
 
+    # Define o cabeçalho dinâmico baseado na opção selecionada
+    if tipo_operacao == "Remover e Ativar ONU":
+        titulo_mensagem = "⚡ *REMOVER E ATIVAR ONU*"
+    else:
+        titulo_mensagem = "⚡ *ATIVAÇÃO DE ONU*"
+
     # Monta o texto formatado para envio
     texto_whatsapp_onu = (
-        f"⚡ *ATIVAÇÃO DE ONU*\n"
+        f"{titulo_mensagem}\n"
         f"Protocolo: {protocolo_input}\n"
         f"PPPOE: {pppoe_input}\n"
         f"CTO: {cto_input}\n"
