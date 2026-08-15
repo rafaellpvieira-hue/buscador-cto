@@ -459,7 +459,7 @@ else:
                 foto_capturada = foto_up
 
         if foto_capturada:
-            st.image(foto_capturada, caption="Foto anexada", use_column_width=True)
+            st.image(foto_capturada, caption="Foto anexada", use_container_width=True)
 
     # Monta o texto formatado para envio
     texto_whatsapp_onu = (
