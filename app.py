@@ -83,9 +83,9 @@ def identificar_cidade_oficial(stack):
     return "OUTROS / NÃO IDENTIFICADO"
 
 def gerar_link_whatsapp(nome_cto, cidade="", coordenadas="", maps_url=""):
-    """ Gera link formatado para envio direto via WhatsApp (apenas Bater CTO, Cidade e Protocolo) """
+    """ Gera link formatado para envio direto via WhatsApp (sem símbolos/emojis no texto) """
     mensagem = (
-        f"📍 *Bater CTO:* {nome_cto}\n"
+        f"*Bater CTO:* {nome_cto}\n"
         f"  *Cidade:* \n"
         f"  *Protocolo:* "
     )
@@ -221,7 +221,7 @@ df = pd.DataFrame(todas_ctos)
 
 modo_busca = st.radio(
     "Escolha a opção desejada:",
-    ["🔎 Buscar por Nome / Cidade", "📍 CTO Mais Próxima (Minha Localização)", "Solicitar ativação/remoção"],
+    ["🔎 Buscar por Nome / Cidade", "📍 CTO Mais Próxima (Minha Localização)", "⚡ Solicitar ativação/remoção"],
     horizontal=True
 )
 
@@ -427,7 +427,7 @@ elif modo_busca == "📍 CTO Mais Próxima (Minha Localização)":
 
 # MODO 3: SOLICITAR ATIVAÇÃO / REMOÇÃO
 else:
-    st.subheader("Solicitar ativação/remoção")
+    st.subheader("⚡ Solicitar ativação/remoção")
     st.caption("Escolha a operação, preencha os dados e tire a foto da ONU para enviar ao suporte")
 
     # Opção para escolher o tipo de ação
@@ -469,7 +469,7 @@ else:
             mime_type = foto_capturada.type or "image/jpeg"
             nome_foto = foto_capturada.name or "foto_onu.jpg"
 
-    # Monta o texto formatado para envio
+    # Monta o texto formatado para envio (sem símbolos/emojis)
     if tipo_operacao == "Remover e Ativar ONU":
         texto_whatsapp_onu = (
             f"*REMOVER E ATIVAR ONU*\n"
