@@ -221,7 +221,7 @@ df = pd.DataFrame(todas_ctos)
 
 modo_busca = st.radio(
     "Escolha a opção desejada:",
-    ["🔎 Buscar por Nome / Cidade", "📍 CTO Mais Próxima (Minha Localização)", "Ativação / Remoção de ONU"],
+    ["🔎 Buscar por Nome / Cidade", "📍 CTO Mais Próxima (Minha Localização)", "Solicitar ativação/remoção"],
     horizontal=True
 )
 
@@ -425,9 +425,9 @@ elif modo_busca == "📍 CTO Mais Próxima (Minha Localização)":
         else:
             st.error("Formato de coordenadas inválido. Exemplo correto: `-22.410920, -45.793186`")
 
-# MODO 3: ATIVAÇÃO DE ONU
+# MODO 3: SOLICITAR ATIVAÇÃO / REMOÇÃO
 else:
-    st.subheader("Ativação / Remoção de ONU")
+    st.subheader("Solicitar ativação/remoção")
     st.caption("Escolha a operação, preencha os dados e tire a foto da ONU para enviar ao suporte")
 
     # Opção para escolher o tipo de ação
