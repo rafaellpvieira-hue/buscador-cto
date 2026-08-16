@@ -254,7 +254,7 @@ if modo_busca == "🔎 Buscar por Nome / Cidade":
             df_filtrado["Nome da CTO"].apply(lambda x: termo_norm in normalizar(str(x)))
         ]
 
-    st.subheader(f"📍 Resultados ({len(df_filtrado)} CTOs encontradas)")
+    st.subheader(f"{len(df_filtrado)} Resultados")
 
     if not df_filtrado.empty:
         st.dataframe(
@@ -515,7 +515,7 @@ else:
             max-width: 450px;
             box-shadow: 0 4px 6px rgba(0,0,0,0.2);
         ">
-            🟢 1. Abrir Direto no WhatsApp (Foto Copiada)
+            🟢 1. Abrir Direto no WhatsApp
         </button>
 
         <button onclick="compartilharNative()" style="
@@ -530,7 +530,7 @@ else:
             width: 100%;
             max-width: 450px;
         ">
-            📲 2. Compartilhar Imagem + Texto (Menu do Celular)
+            📲 2. Compartilhar Imagem + Texto
         </button>
 
         <div id="shareStatus" style="font-size: 13px; color: #ffeb3b; text-align: center; max-width: 450px; font-weight: bold;"></div>
