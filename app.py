@@ -83,7 +83,7 @@ def identificar_cidade_oficial(stack):
     return "OUTROS / NÃO IDENTIFICADO"
 
 def gerar_link_whatsapp(nome_cto, cidade="", coordenadas="", maps_url=""):
-    """ Gera link formatado para envio direto via WhatsApp (sem símbolos/emojis no texto) """
+    """ Gera link formatado para envio direto via WhatsApp (sem alfinete) """
     mensagem = (
         f"*Bater CTO:* {nome_cto}\n"
         f"  *Cidade:* \n"
@@ -156,7 +156,7 @@ def processar_bytes_kml_kmz(conteudo_bytes, nome_arquivo):
                     "Longitude": lon,
                     "Coordenadas": coords_str,
                     "Rota no GPS": maps_url,
-                    "WhatsApp": wsp_url
+                    "Bater CTO": wsp_url
                 })
     except Exception as e:
         st.error(f"Erro ao processar o arquivo {nome_arquivo}: {e}")
@@ -258,7 +258,7 @@ if modo_busca == "🔎 Buscar por Nome / Cidade":
 
     if not df_filtrado.empty:
         st.dataframe(
-            df_filtrado[["Projeto / Cidade", "Nome da CTO", "Coordenadas", "Rota no GPS", "WhatsApp"]],
+            df_filtrado[["Projeto / Cidade", "Nome da CTO", "Coordenadas", "Rota no GPS", "Bater CTO"]],
             use_container_width=True,
             hide_index=True,
             column_config={
@@ -268,11 +268,11 @@ if modo_busca == "🔎 Buscar por Nome / Cidade":
                     validate="^https://",
                     display_text="🗺️ Abrir no Mapa"
                 ),
-                "WhatsApp": st.column_config.LinkColumn(
-                    "WhatsApp",
+                "Bater CTO": st.column_config.LinkColumn(
+                    "Bater CTO",
                     help="Enviar dados desta CTO pelo WhatsApp",
                     validate="^https://",
-                    display_text="📲 Compartilhar"
+                    display_text="📲 Bater CTO"
                 )
             }
         )
@@ -280,7 +280,7 @@ if modo_busca == "🔎 Buscar por Nome / Cidade":
         if len(df_filtrado) == 1:
             cto_nome = df_filtrado.iloc[0]["Nome da CTO"]
             coords_texto = df_filtrado.iloc[0]["Coordenadas"]
-            wsp_link = df_filtrado.iloc[0]["WhatsApp"]
+            wsp_link = df_filtrado.iloc[0]["Bater CTO"]
             
             st.write("---")
             col_c1, col_c2 = st.columns([1, 1])
@@ -392,7 +392,7 @@ elif modo_busca == "📍 CTO Mais Próxima (Minha Localização)":
             st.success(f"🎯 Mostrando as {len(df_prox)} CTOs mais próximas de você:")
 
             st.dataframe(
-                df_prox[["Distância", "Nome da CTO", "Projeto / Cidade", "Coordenadas", "Rota no GPS", "WhatsApp"]],
+                df_prox[["Distância", "Nome da CTO", "Projeto / Cidade", "Coordenadas", "Rota no GPS", "Bater CTO"]],
                 use_container_width=True,
                 hide_index=True,
                 column_config={
@@ -402,11 +402,11 @@ elif modo_busca == "📍 CTO Mais Próxima (Minha Localização)":
                         validate="^https://",
                         display_text="🗺️ Traçar Rota"
                     ),
-                    "WhatsApp": st.column_config.LinkColumn(
-                        "WhatsApp",
+                    "Bater CTO": st.column_config.LinkColumn(
+                        "Bater CTO",
                         help="Enviar dados desta CTO pelo WhatsApp",
                         validate="^https://",
-                        display_text="📲 Compartilhar"
+                        display_text="📲 Bater CTO"
                     )
                 }
             )
@@ -420,7 +420,7 @@ elif modo_busca == "📍 CTO Mais Próxima (Minha Localização)":
                 st.code(cto_top["Coordenadas"], language=None)
             with col_p2:
                 st.markdown(f"📲 **Enviar para o WhatsApp:**")
-                st.link_button("🟢 Compartilhar no WhatsApp", cto_top["WhatsApp"])
+                st.link_button("🟢 Compartilhar no WhatsApp", cto_top["Bater CTO"])
 
         else:
             st.error("Formato de coordenadas inválido. Exemplo correto: `-22.410920, -45.793186`")
@@ -430,7 +430,6 @@ else:
     st.subheader("⚡ Solicitar ativação/remoção")
     st.caption("Escolha a operação, preencha os dados e tire a foto da ONU para enviar ao suporte")
 
-    # Opção para escolher o tipo de ação
     tipo_operacao = st.radio(
         "Selecione o tipo de operação:",
         ["Ativação de ONU", "Remover e Ativar ONU"],
@@ -469,7 +468,6 @@ else:
             mime_type = foto_capturada.type or "image/jpeg"
             nome_foto = foto_capturada.name or "foto_onu.jpg"
 
-    # Monta o texto formatado para envio (sem símbolos/emojis)
     if tipo_operacao == "Remover e Ativar ONU":
         texto_whatsapp_onu = (
             f"*REMOVER E ATIVAR ONU*\n"
@@ -494,7 +492,6 @@ else:
     st.markdown("📋 **Texto gerado para o WhatsApp:**")
     st.code(texto_whatsapp_onu, language=None)
 
-    # Preparar variáveis JSON para o Script HTML
     texto_json = json.dumps(texto_whatsapp_onu)
     b64_json = json.dumps(b64_foto)
     mime_json = json.dumps(mime_type)
