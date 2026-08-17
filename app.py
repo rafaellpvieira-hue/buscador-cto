@@ -6,11 +6,9 @@ import math
 import urllib.parse
 import base64
 import json
-import io
 import pandas as pd
 import streamlit as st
 import streamlit.components.v1 as components
-from PIL import Image
 
 
 # 1. Configuração da página
@@ -135,6 +133,7 @@ def processar_bytes_kml_kmz(conteudo_bytes, nome_arquivo):
         if ext == ".kml":
             kmls_bytes.append(conteudo_bytes)
         elif ext == ".kmz":
+            import io
             with zipfile.ZipFile(io.BytesIO(conteudo_bytes), 'r') as z:
                 kmls = [f for f in z.namelist() if f.lower().endswith('.kml')]
                 for kml_filename in kmls:
@@ -447,7 +446,6 @@ else:
         
         if tipo_operacao == "Remover e Ativar ONU":
             onu_sn_input = st.text_input("ONU NOVA s/n:", placeholder="Ex: ALCLB1234567")
-            cidade_input = ""
         else:
             onu_sn_input = st.text_input("ONU s/n:", placeholder="Ex: ALCLB1234567")
             cidade_input = st.text_input("Cidade:", placeholder="Ex: PARAISOPOLIS")
@@ -464,24 +462,11 @@ else:
         )
 
         if foto_capturada:
-            try:
-                # Otimização: Redimensiona e compacta a imagem para evitar travamentos de memória
-                img = Image.open(foto_capturada)
-                if img.mode in ("RGBA", "P"):
-                    img = img.convert("RGB")
-                img.thumbnail((1024, 1024))  # Reduz a resolução mantendo a proporção
-                
-                buffer = io.BytesIO()
-                img.save(buffer, format="JPEG", quality=75)  # Compacta em 75%
-                bytes_foto = buffer.getvalue()
-
-                st.image(bytes_foto, caption="Foto anexada (Otimizada)", use_container_width=True)
-                
-                b64_foto = base64.b64encode(bytes_foto).decode('utf-8')
-                mime_type = "image/jpeg"
-                nome_foto = "foto_onu.jpg"
-            except Exception as e:
-                st.error(f"Erro ao processar a imagem: {e}")
+            st.image(foto_capturada, caption="Foto anexada", use_container_width=True)
+            bytes_foto = foto_capturada.getvalue()
+            b64_foto = base64.b64encode(bytes_foto).decode('utf-8')
+            mime_type = foto_capturada.type or "image/jpeg"
+            nome_foto = foto_capturada.name or "foto_onu.jpg"
 
     if tipo_operacao == "Remover e Ativar ONU":
         texto_whatsapp_onu = (
